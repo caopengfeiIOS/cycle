@@ -1,13 +1,14 @@
-//
+ //
 //  AppDelegate.m
 //  cycleLife
 //
 //  Created by hbgl on 17/11/28.
 //  Copyright © 2017年 cpf. All rights reserved.
 //
-
+#define K_Version @"CFBundleShortVersionString"
 #import "AppDelegate.h"
-
+#import "MainTabBarViewController.h"
+#import "NewFeatureViewController.h"
 @interface AppDelegate ()
 
 @end
@@ -17,9 +18,51 @@
 
 - (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions {
     // Override point for customization after application launch.
+    self.window = [[UIWindow alloc]initWithFrame:[UIScreen mainScreen].bounds];
+   [self gotoNewFeture];
+    [self.window makeKeyAndVisible];
+    //开机视频
+    UIImageView *gifImageView = [[UIImageView alloc] initWithFrame:CGRectMake(0, 0, __ScreenWidth, __ScreenHeight)];
+    
+    NSMutableArray *arrayTemp = [[NSMutableArray alloc] init];
+    for (int i = 1; i < 51; i++)
+    {
+        NSString *imageName= [NSString stringWithFormat:@"%d.jpg", i];
+       
+        UIImage *image = [UIImage imageNamed:imageName];
+        [arrayTemp addObject:image];
+    }
+    gifImageView.animationImages = arrayTemp; //动画图片数组
+    gifImageView.animationDuration = 2; //执行一次完整动画所需的时长
+    gifImageView.animationRepeatCount = 1;  //动画重复次数
+    [gifImageView startAnimating];
+    
+    [self.window addSubview:gifImageView];
+    [gifImageView performSelector:@selector(setAnimationImages:) withObject:nil afterDelay:gifImageView.animationDuration];
+
     return YES;
 }
+-(void)gotoNewFeture  
+{
+    // 读取存储在沙盒中的版本号
+    NSString *lastVersion = [[NSUserDefaults standardUserDefaults]stringForKey:K_Version];
+    // 当前软件的版本号
+    NSString *currentVersion =  [NSBundle mainBundle].infoDictionary[K_Version];
+    //Bundle version
+    if ([currentVersion isEqualToString:lastVersion]) {
+        
+        //  设置自动登录
+        [BraschTool SetAutoLogin:K_IsLoginAuto window:self.window DoHandle:nil];
+        
+    }else{// 版本不一样 显示新特性
+        self.window.rootViewController = [[NewFeatureViewController alloc]init];
+        // 更新沙盒中版本号
+        [[NSUserDefaults standardUserDefaults] setObject:currentVersion forKey:K_Version];
+        // 同步
+        [[NSUserDefaults standardUserDefaults]synchronize];
+    }
 
+}
 
 - (void)applicationWillResignActive:(UIApplication *)application {
     // Sent when the application is about to move from active to inactive state. This can occur for certain types of temporary interruptions (such as an incoming phone call or SMS message) or when the user quits the application and it begins the transition to the background state.
